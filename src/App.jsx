@@ -8,13 +8,15 @@ export default function App() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [refreshTick, setRefreshTick] = useState(0);
 
   const loadTrends = async () => {
     try {
       setLoading(true);
       setError('');
-      const response = await axios.get('/api/trends');
+      const response = await axios.get(`/api/trends?refresh=${Date.now()}`);
       setData(response.data);
+      setRefreshTick((value) => value + 1);
     } catch {
       setError('We could not load the latest trend pulse. Try again in a moment.');
     } finally {
@@ -100,7 +102,14 @@ export default function App() {
                   <div className="space-y-5">
                     <div className="flex items-center justify-between">
                       <h2 className="text-2xl font-bold tracking-tight">Trending now</h2>
-                      <p className="text-sm font-medium text-ink-500">Updated {data.updatedAt}</p>
+                      <div className="text-right text-sm font-medium text-ink-500">
+                        <p>Updated {data.updatedAt}</p>
+                        <p className="mt-1 text-xs text-ink-400">
+                          {data.sourceCount > 0
+                            ? `Live check #${refreshTick} · ${data.sourceNames.join(', ')}`
+                            : `Backup edit · refresh #${refreshTick}`}
+                        </p>
+                      </div>
                     </div>
                     <div className="grid gap-5 md:grid-cols-2">
                       {data.trends.map((trend, index) => (
